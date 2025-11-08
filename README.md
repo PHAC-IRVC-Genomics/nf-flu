@@ -12,6 +12,14 @@
 
 ## Introduction
 
+> **A note from IRVC**
+>
+> The [PHAC-IRVC-genomics/nf-flu](https://github.com/PHAC-IRVC-Genomics/nf-flu) version of **nf-flu** incorporates IRVC-specific default settings and workflow modifications relative to the original [CFIA-NCFAD/nf-flu](https://github.com/CFIA-NCFAD/nf-flu) pipeline.
+>
+> All credit goes to the originl developers of the pipeline; we are immensely grateful for their contributions! This gratitude extends to all developers whose tools are used in this workflow.
+>
+> Our goal is to more meaningfully support NCFAD and the continued development of the **nf-flu** pipeline.
+
 **nf-flu** is a [Nextflow][] bioinformatics analysis pipeline for assembly and analysis of Influenza A and B viruses from Illumina or Nanopore sequencing data or previously assembled FASTA sequences.
 Since Influenza has a segmented genome consisting of 8 gene segments, the pipeline will automatically select the top matching reference sequence from NCBI for each gene segment based on [IRMA][] assembly and nucleotide [BLAST][] against all Influenza sequences from NCBI.
 Users can also provide their own reference sequences to include in the top reference sequence selection process.
@@ -275,8 +283,9 @@ https://doi.org/10.1186/s12859-020-3537-3
 
 * [Peter Kruczkiewicz](https://github.com/peterk87) ([CFIA-NCFAD](https://github.com/CFIA-NCFAD)) - lead developer
 * [Hai Nguyen](https://github.com/nhhaidee) ([CFIA-NCFAD](https://github.com/CFIA-NCFAD)) - Nanopore workflow
-* [Abdallah Meknas](https://github.com/ameknas-phac) (Influenza, Respiratory Viruses, and Coronavirus Section (IRVC), Public Health Agency of Canada (PHAC)) - expansion of the Illumina workflow
 * [Cass Erdelyan](https://github.com/cerdelyan/) ([CFIA-NCFAD](https://github.com/CFIA-NCFAD)) - development, testing and valuable feedback
+* [Abdallah Meknas](https://github.com/ameknas-phac) (Influenza, Respiratory Viruses, and Coronavirus Section (IRVC), Public Health Agency of Canada (PHAC)) - expansion of the Illumina workflow
+* [Cody Buchanan](https://github.com/Codes1985) (Influenza, Respiratory Viruses, and Coronavirus Section (IRVC), Public Health Agency of Canada (PHAC)) - testing and valuable feedback
 
 ## Credits
 

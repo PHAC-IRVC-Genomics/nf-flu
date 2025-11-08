@@ -87,6 +87,7 @@ def main(
         'seqName',
         'dataset_name',
         'dataset_tag',
+        'legacy-clade',
         'clade',
         'subclade',
     ]

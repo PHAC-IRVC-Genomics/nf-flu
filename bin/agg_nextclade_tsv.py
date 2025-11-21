@@ -87,9 +87,11 @@ def main(
         'seqName',
         'dataset_name',
         'dataset_tag',
-        'legacy-clade',
         'clade',
+		'legacy-clade',
+        'short-clade',
         'subclade',
+	    'proposedSubclade',
     ]
     rest_cols = [col for col in all_cols if col not in first_ordered_cols]
     rest_cols.sort()

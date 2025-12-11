@@ -192,6 +192,24 @@
                     "fa_icon": "fas fa-fast-forward",
                     "description": "Skip genome-wide and amplicon coverage plot generation from mosdepth output."
                 },
+                "samtools_flagF": {
+                    "type": "integer",
+                    "default": 2308,
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "One combined -F flag (default 2308 = 4 + 256 + 2048: unmapped + secondary + supplementary)."
+                },
+                "filter_bam": {
+                    "type": "boolean",
+                    "default": false,
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Enable/disable AWK-based mapped read length BAM filtering"
+                },
+                "min_map_len": {
+                    "type": "integer",
+                    "default": 800,
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Read with minimum mapped length to retain in BAM file."
+                },
                 "output_unmapped_reads": {
                     "type": "boolean",
                     "default": false,

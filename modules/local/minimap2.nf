@@ -21,29 +21,70 @@ process MINIMAP2 {
   path "versions.yml" , emit: versions
 
   script:
-  def prefix  = fluPrefix(sample, segment, ref_id)
-  bam         = "${prefix}.bam"
-  depths      = "${prefix}.depths.tsv"
-  flagstat    = "${prefix}.flagstat"
-  idxstats    = "${prefix}.idxstats"
-  stats       = "${prefix}.stats"
-  minimap2_log = "${prefix}.minimap2.log"
+  def prefix        = fluPrefix(sample, segment, ref_id)
+  bam               = "${prefix}.bam"
+  raw_bam           = "${prefix}.unfiltered.bam"
+  flagstat          = "${prefix}.flagstat"
+  idxstats          = "${prefix}.idxstats"
+  stats             = "${prefix}.stats"
+  minimap2_log      = "${prefix}.minimap2.log"
 
-  // Determine the mapping option based on the platform
+  // Mapping preset based on platform
   def map_option = params.platform == 'nanopore' ? 'map-ont' : 'sr'
-  samtools_view_flag = params.output_unmapped_reads ? "" : "-F 4"
+
+  // One combined -F flag (default 2308 = 4 + 256 + 2048: unmapped + secondary + supplementary)
+  def flagF = (params.samtools_flagF == null) ? 2308 : params.samtools_flagF as int
+
+  // Threshold for aligned (M, X and =) query bases
+  def min_len = (params.min_map_len == null) ? 0 : params.min_map_len as int
+
+  boolean filter_bam = false
+  if (params.filter_bam instanceof Boolean) {
+    filter_bam = params.filter_bam
+  } else if (params.filter_bam != null) {
+    filter_bam = params.filter_bam.toString().toLowerCase() in ['1','true','yes','y']
+  }
+
+  // AWK counts only M, X and = CIGAR ops as aligned bases: ignores soft clips, insertions, deletions and skips.
+
   """
-  minimap2 \\
-    -ax $map_option \\
-    -t${task.cpus} \\
-    $ref_fasta \\
-    $reads \\
-    | samtools sort -@${task.cpus} \\
-    | samtools view -b $samtools_view_flag \\
-    > $bam
+  MAP_OPTION=$map_option
+  FLAG_F=$flagF
+  MIN_LEN=$min_len
+  FILTER_BAM=$filter_bam
+
+  if [ "${params.platform}" = "nanopore" ] && [ "\$MIN_LEN" -gt 0 ] && [ "\$FILTER_BAM" = "true" ]; then
+    echo "AWK-based mapped read-length filtering ENABLED: (platform=${params.platform}, MIN_LEN=$min_len, filter_bam=$filter_bam)" >&2
+    minimap2 -ax \$MAP_OPTION -t${task.cpus} $ref_fasta $reads \\
+      | samtools view -h -@${task.cpus} -F \$FLAG_F \\
+      | tee >(samtools view -@${task.cpus} -b \\
+              | samtools sort -@${task.cpus} -O BAM -o $raw_bam) \\
+      | awk 'BEGIN {OFS="\t"} {
+          if (\$0 ~ /^@/) {print; next}
+          cigar=\$6; aligned_length=0;
+          match(cigar, /([0-9]+[M=X])/)
+          while (RLENGTH > -1) {
+              match_value = substr(cigar, RSTART, RLENGTH - 1) # -1 as we can chop off the cigar operator
+              aligned_length += match_value;
+              cigar = substr(cigar, RSTART + RLENGTH);
+              match(cigar, /([0-9]+[M=])/)
+          }
+          if (aligned_length >= $min_len) print
+        }' \\
+      | samtools view -@${task.cpus} -b \\
+      | samtools sort -@${task.cpus} -O BAM > $bam
+
+    samtools index $raw_bam
+
+  else
+    echo "AWK-based mapped read-length filtering DISABLED: (platform=${params.platform}, MIN_LEN=\$MIN_LEN)" >&2
+    minimap2 -ax \$MAP_OPTION -t${task.cpus} $ref_fasta $reads \\
+      | samtools view -h -@${task.cpus} -F \$FLAG_F \\
+      | samtools view -@${task.cpus} -b \\
+      | samtools sort -@${task.cpus} -O BAM > $bam
+  fi
 
   samtools index $bam
-
   samtools stats $bam > $stats
   samtools flagstat $bam > $flagstat
   samtools idxstats $bam > $idxstats
@@ -51,7 +92,7 @@ process MINIMAP2 {
   ln -s .command.log $minimap2_log
 
   ${params.platform == 'illumina' ? "samtools faidx $ref_fasta" : ""}
-  
+
   cat <<-END_VERSIONS > versions.yml
   "${task.process}":
       minimap2: \$(minimap2 --version 2>&1)

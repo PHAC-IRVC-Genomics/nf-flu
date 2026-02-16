@@ -92,6 +92,9 @@ def main(
         'short-clade',
         'subclade',
 	    'proposedSubclade',
+        "qc.overallStatus",
+        "coverage",
+        "nonACGTNs"
     ]
     rest_cols = [col for col in all_cols if col not in first_ordered_cols]
     rest_cols.sort()

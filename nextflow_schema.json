@@ -180,18 +180,12 @@
             },
             "fa_icon": "fas fa-cogs"
         },
-        "nanopore_illumina_options": {
-            "title": "Nanopore/Illumina options",
+        "mapping_options": {
+            "title": "Mapping Options",
             "type": "object",
-            "description": "Options common to both the Nanopore and Illumina workflows in the pipeline.",
+            "description": "Minimap2 read mapping options.",
             "default": "",
             "properties": {
-                "skip_mosdepth": {
-                    "type": "boolean",
-                    "default": false,
-                    "fa_icon": "fas fa-fast-forward",
-                    "description": "Skip genome-wide and amplicon coverage plot generation from mosdepth output."
-                },
                 "samtools_flagF": {
                     "type": "integer",
                     "default": 2308,
@@ -202,13 +196,31 @@
                     "type": "boolean",
                     "default": false,
                     "fa_icon": "fas fa-fast-forward",
-                    "description": "Enable/disable AWK-based mapped read length BAM filtering"
+                    "description": "Enable/disable advanced DVG filtering using mapped read length BAM filtering"
+                },
+                "max_gap_size": {
+                    "type": "integer",
+                    "default": 500,
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Minimap2 -G parameter [Maximum gap on the reference; default 200k]"
+                },
+                "allow_secondary": {
+                    "type": "boolean",
+                    "default": false,
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Minimap2 --secondary=yes|no parameter [Whether to output secondary alignments; default: yes]"
                 },
                 "min_map_len": {
                     "type": "integer",
                     "default": 800,
                     "fa_icon": "fas fa-fast-forward",
                     "description": "Read with minimum mapped length to retain in BAM file."
+                },
+                "max_skip_size": {
+                    "type": "integer",
+                    "default": 200,
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Maximum allowed CIGAR N/D (i.e., skipped region, deletion) Operation range (bp); 0 to disable."
                 },
                 "output_unmapped_reads": {
                     "type": "boolean",
@@ -325,6 +337,12 @@
                     "default": false,
                     "description": "Skip the Nextclade analysis.",
                     "fa_icon": "fas fa-fast-forward"
+                },
+                "skip_mosdepth": {
+                    "type": "boolean",
+                    "default": false,
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip genome-wide and amplicon coverage plot generation from mosdepth output."
                 }
             }
         },
@@ -463,7 +481,7 @@
             "$ref": "#/definitions/irma_assembly_options"
         },
         {
-            "$ref": "#/definitions/nanopore_illumina_options"
+            "$ref": "#/definitions/mapping_options"
         },
         {
             "$ref": "#/definitions/mismatch_report_option"

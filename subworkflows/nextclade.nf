@@ -1,6 +1,6 @@
 nextflow.enable.dsl = 2
 
-include { NEXTCLADE_DATASET_GET; NEXTCLADE_RUN; AGG_NEXTCLADE_TSV } from '../modules/local/nextclade'
+include { NEXTCLADE_DATASET_GET; NEXTCLADE_RUN; AGG_NEXTCLADE_TSV; NEXTCLADE_TO_MULTIQC } from '../modules/local/nextclade'
 
 workflow NEXTCLADE {
   take:
@@ -43,7 +43,14 @@ workflow NEXTCLADE {
     ch_nextclade_outputs_csv
   )
   ch_versions = ch_versions.mix(AGG_NEXTCLADE_TSV.out.versions)
-  
+  NEXTCLADE_TO_MULTIQC(AGG_NEXTCLADE_TSV.out.tsv)
+  ch_versions = ch_versions.mix(NEXTCLADE_TO_MULTIQC.out.versions)
+
+  // Flatten the mqc output here, before emit
+  ch_mqc_tsv = NEXTCLADE_TO_MULTIQC.out.mqc_tsv.flatten()
+
   emit:
+  tsv      = AGG_NEXTCLADE_TSV.out.tsv
+  mqc_tsv  = ch_mqc_tsv
   versions = ch_versions
 }

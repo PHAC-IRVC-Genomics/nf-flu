@@ -295,12 +295,14 @@ workflow ILLUMINA {
     GENIN2(PREP_FLUMUT_FASTA.out.fasta)
     ch_versions = ch_versions.mix(GENIN2.out.versions)
   }
+  ch_nextclade_mqc = Channel.empty()
   if (!params.skip_nextclade) {
     NEXTCLADE(
       ch_cat_consensus_fasta,
       params.nextclade_datasets_csv
     )
     ch_versions = ch_versions.mix(NEXTCLADE.out.versions)
+    ch_nextclade_mqc = NEXTCLADE.out.mqc_tsv
   }
 
   workflow_summary    = Schema.params_summary_multiqc(workflow, summary_params)
@@ -318,6 +320,7 @@ workflow ILLUMINA {
       MINIMAP2.out.stats.collect().ifEmpty([]),
       MOSDEPTH_GENOME.out.mqc.collect().ifEmpty([]),
       BCFTOOLS_STATS.out.stats.collect().ifEmpty([]),
+      ch_nextclade_mqc.collect().ifEmpty([]),
       MQC_VERSIONS_TABLE.out.mqc_yml.collect(),
       ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
   )

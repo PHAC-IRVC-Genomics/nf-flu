@@ -315,6 +315,19 @@
                 }
             }
         },
+        "multiqc_options": {
+            "title": "MultiQC Options",
+            "type": "object",
+            "description": "Options for MultiQC report generation",
+            "properties": {
+                "nextclade_split_segments": {
+                    "type": "string",
+                    "default": "HA",
+                    "description": "Optionally split out Nextclade results from specific influenza gene segments to display in MultiQC.",
+                    "fa_icon": "fas fa-virus"
+                }
+            }
+        },
         "skipping_options": {
             "title": "Skipping options",
             "type": "object",
@@ -494,6 +507,9 @@
         },
         {
             "$ref": "#/definitions/nextclade_options"
+        },
+        {
+            "$ref": "#/definitions/multiqc_options"
         },
         {
             "$ref": "#/definitions/skipping_options"

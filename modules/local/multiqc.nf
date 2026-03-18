@@ -1,5 +1,5 @@
 process MULTIQC {
-  label 'process_long'
+  label 'super_heavy'
 
   conda "bioconda::multiqc=1.23"
   if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
@@ -13,6 +13,7 @@ process MULTIQC {
   path('samtools/*')
   path('mosdepth/*')
   path('bcftools/*')
+  path('nextclade/*')
   path('software_versions/*')
   path(workflow_summary)
 

@@ -5,6 +5,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [[IRVC v1.0.2](https://github.com/PHAC-IRVC-Genomics/nf-flu/releases/tag/v1.0.2)] - 2026-03-20
 * Update IRMA to v1.2.0
+* Updated Genoflu to v1.07
+* Incorporated salient results from Nextclade analysis into MultiQC Report
+* Minor code cleanup: removed legacy process `VCF_FILTER_FRAMESHIFT` from `modules_nanopore.config`; see [[CFIA-NCFAD/nf-flu PR-129](https://github.com/CFIA-NCFAD/nf-flu/pull/129/changes/cc2c1c9af7d94c9c02c178e2e8802e632d20313f)]
+
+## [[IRVC v1.0.1](https://github.com/PHAC-IRVC-Genomics/nf-flu/releases/tag/v1.0.1)] - 2026-02-16
+* Improved AWK-based filtering and removal of reads associated with defective viral genomes
+    * Added criteria to reject reads with large internal deletions/skips and multi-block split alignments (i.e., short reads with secondary alignments)
+    * New configurable parameters:
+      * `max_gap_size`; pipeline default: 500 (bp); [corresponding minimap2 parameter: -G]
+      * `allow_secondary`; pipeline default: false; [corresponding minimap2 parameter: --secondary=yes|no]
+      * `max_skip_size`; pipeline default: 200 (bp); [Reads with N or D CIGAR operations larger than this threshold are rejected]
+* Incorporated minor updates from CFIA-NCFAD v3.10.3
+* Other minor QOL changes
+
+## [[IRVC v1.0.0](https://github.com/PHAC-IRVC-Genomics/nf-flu/releases/tag/v1.0.0)] - 2025-12-11
+* Forked from https://github.com/CFIA-NCFAD/nf-flu
+* Modified default settings to IRVC standard
+* Added AWK-based mapped read length BAM filtering for Nanopore sequencing
+* Updated Genin2 to v2.1.5
 
 ## [[3.10.3](https://github.com/CFIA-NCFAD/nf-flu/releases/tag/3.10.3)] - 2026-01-26
 

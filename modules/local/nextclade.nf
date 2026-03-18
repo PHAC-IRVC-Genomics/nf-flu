@@ -66,6 +66,35 @@ process NEXTCLADE_RUN {
   """
 }
 
+process NEXTCLADE_TO_MULTIQC {
+  label 'process_low'
+
+  conda 'conda-forge::python=3.10'
+  if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
+    container 'https://depot.galaxyproject.org/singularity/python:3.10'
+  } else {
+    container 'quay.io/biocontainers/python:3.10'
+  }
+
+  input:
+  path(nextclade_tsv)
+
+  output:
+  path("nextclade_*_mqc.tsv"), emit: mqc_tsv
+  path("versions.yml"),        emit: versions
+
+  script:
+  def split_args = params.nextclade_split_segments ? "--split-segments ${params.nextclade_split_segments}" : ""
+  """
+  nextclade_to_multiqc.py $split_args $nextclade_tsv nextclade_all_mqc.tsv
+
+  cat <<-END_VERSIONS > versions.yml
+  "${task.process}":
+      nextclade_to_multiqc.py: \$(nextclade_to_multiqc.py --version | sed 's/nextclade_to_multiqc.py //')
+  END_VERSIONS
+  """
+}
+
 process AGG_NEXTCLADE_TSV {
   label 'process_medium'
 

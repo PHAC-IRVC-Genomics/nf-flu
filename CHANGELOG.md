@@ -7,9 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Update `Genin2` to v2.1.6
 * Update `Nextclade` to v3.21.0
 * Incorporated `cdsCoverage` from `Nextclade` results into `MultiQC` Report
+* Updated `VADR` alert parameters for `assemblies` mode to pass the following alerts: `--alt_pass lowsim5s,lowsim3s,indf5pst,indf3pst`
 * Minor update to VADR output files to identify edgecase where segments pass VADR but could have short truncations:
   * `vadr-annotation-alerts.txt` --> lists segments that fail VADR annotation
-  * `vadr-annotation-alerts.txt` --> lists segments that pass VADR annotation but may non-fatal issues such as 5' and/or 3' truncations
+  * `vadr-annotation-alerts.txt` --> lists segments that pass VADR annotation but may have non-fatal issues such as 5' and/or 3' truncations
 
 ## [[IRVC v1.0.2](https://github.com/PHAC-IRVC-Genomics/nf-flu/releases/tag/v1.0.2)] - 2026-03-18
 * Update IRMA to v1.2.0

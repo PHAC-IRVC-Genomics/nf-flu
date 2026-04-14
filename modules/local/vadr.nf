@@ -72,12 +72,14 @@ process VADR_SUMMARIZE_ISSUES {
   path(vadr_output, stageAs: "input*/*")
 
   output:
+  path('vadr-annotation-alerts.txt'), emit: alerts
   path('vadr-annotation-issues.txt'), emit: issues
   path('vadr-annotation-failed-sequences.txt'), emit: failed
 
   script:
   """
-  cat input*/**/*.alt.list | awk 'NR == 1 || \$0 !~ /^#/' > vadr-annotation-issues.txt
+  cat input*/**/*.alt.list | awk 'NR == 1 || \$0 !~ /^#/' > vadr-annotation-alerts.txt
+  cat input*/**/*.sgm | awk 'NR <= 3 || (\$0 !~ /^#/ && \$6 == "CDS" && (\$4 == "FAIL" || (\$21 != "no" && \$21 != "-")))' > vadr-annotation-issues.txt
   cat input*/**/*.fail.list > vadr-annotation-failed-sequences.txt
   """
 }

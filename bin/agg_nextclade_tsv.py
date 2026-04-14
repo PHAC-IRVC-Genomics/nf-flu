@@ -7,7 +7,7 @@ import polars as pl
 import typer
 from rich.logging import RichHandler
 
-VERSION = "2026-04-14"
+VERSION = "2026.04.14"
 
 logger = logging.getLogger(__name__)
 app = typer.Typer(rich_markup_mode="markdown")

@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Minor update to VADR output files to identify edgecase where segments pass VADR but could have short truncations:
   * `vadr-annotation-alerts.txt` --> lists segments that fail VADR annotation
   * `vadr-annotation-alerts.txt` --> lists segments that pass VADR annotation but may have non-fatal issues such as 5' and/or 3' truncations
-* Added error handling in `illumina.nf` for read count calculation to skip and warn against corrupted .fastq files instead of failing the pipeline
+* Added error handling in `illumina.nf` and `nanopore.nf` workflows for read count calculation to skip and warn against corrupted .fastq files instead of failing the pipeline
 
 ## [[IRVC v1.0.2](https://github.com/PHAC-IRVC-Genomics/nf-flu/releases/tag/v1.0.2)] - 2026-03-18
 * Update IRMA to v1.2.0

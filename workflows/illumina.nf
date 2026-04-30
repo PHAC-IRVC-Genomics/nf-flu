@@ -115,7 +115,13 @@ workflow ILLUMINA {
   // Read Count Check
   ch_input_sorted
     .map { meta, reads ->
-      def count = reads.collect { it.countFastq() }.sum()
+      def count = 0
+      try {
+        count = reads.collect { it.countFastq() }.sum()
+      } catch (Exception e) {
+        log.warn "WARNING: Skipping corrupt/truncated file for sample '${meta.id}' — ${e.message}"
+        count = 0  // sentinel value to force it into the fail branch
+      }
       return [ meta, reads, count ]
     }
     .branch { meta, reads, count ->

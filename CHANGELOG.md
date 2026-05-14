@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * `vadr-annotation-alerts.txt` --> lists segments that fail VADR annotation
   * `vadr-annotation-alerts.txt` --> lists segments that pass VADR annotation but may have non-fatal issues such as 5' and/or 3' truncations
 * Added error handling in `illumina.nf` and `nanopore.nf` workflows for read count calculation to skip and warn against corrupted .fastq files instead of failing the pipeline
+* Updated `seqtk_seq.nf` to convert a degenerate nucleotide to one of its representative non-degenerate versions (similar to `Clair3) in the selected reference sequence as `BCFTools` does not handle degenerate nucleotides during consensus generation, and will place an `N` instead of the appropriate nucleotide into the consensus sequence [[commit 0cfcc97](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/0cfcc97c37b242df2cdbb99af4e112bb6ca7149d)]
 
 ## [[IRVC v1.0.2](https://github.com/PHAC-IRVC-Genomics/nf-flu/releases/tag/v1.0.2)] - 2026-03-18
 * Update IRMA to v1.2.0

@@ -3,16 +3,49 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [[IRVC v1.0.3](https://github.com/PHAC-IRVC-Genomics/nf-flu/releases/tag/v1.0.2)] - 2026-04-XX
+## [[IRVC v1.2.0](https://github.com/PHAC-IRVC-Genomics/nf-flu/releases/tag/v1.0.2)] - 2026-04-XX
+
+### Major Updates:
+
+Re-implimented the Defective Viral Genome (DVG) filtering process as a standalone Python script (`dvg_filter.py`) called in `minimap2.nf`:
+
+* Optional DVG filtering for Nanopore data (`--filter_bam`, default: `false`). When enabled, a two-pass alignment strategy produces both an unfiltered archive BAM and a filtered BAM suitable for variant calling. Filtering is handled by `dvg_filter.py` with four sequential CIGAR-based criteria and segment-aware thresholds:
+  
+     * Minimum aligned length (`--min_map_len`, default `null`: see below): minimum aligned bases required to retain a read in the filtered BAM
+     * Maximum single N/D operation (`--max_skip_size`, default `null`: see below): discards reads with a large internal deletion
+     * Single contiguous alignment block: failsafe that discards reads with multiple alignment blocks not explained by a deletion (i.e., malformed/unusual CIGAR strings)
+     * Soft-clip fraction (`--max_clip_frac`, default `0.15`): discards internally-mapping DVG reads with heavily clipped flanks larger than a typical primer overhang
+       
+* Both `--min_map_len` and `--max_skip_size` resolve to per-segment defaults at the Nextflow level in `minimap2.nf`:
+     * `--min_map_len`, default: `null` = ~50% of segment length and `--max_skip_size`, default: `null` = ~20% segment length
+          * Note: the `--max_skip_size` default (~20% segment length) should be comfortably larger than known biologically-important deletions (e.g., NA stalk deletions)
+     * Both criteria can be overriden globally with a single value applied to every segment: (e.g., `--min_map_len 800` and `--max_skip_size 300`)
+     * Both criteria can be disabled: (e.g., `--min_map_len 0` and `--max_skip_size 0`)
+       
+* Per-sample, per-segment filtering statistics and notable read identification (i.e., those with deletions in the biologically ambiguous range: 50 bp to `max_skip_size`) are written to dvg_filter_stats.json
+  
+* `--filter_bam`, `--min_map_len`, `--max_skip_size` and `--max_clip_frac` are configurable in `nextflow.config` and also from command line
+
+### Minor Updates:
+
 * Update `Genin2` to v2.1.6
+  
 * Update `Nextclade` to v3.21.0
+  
 * Incorporated `cdsCoverage` from `Nextclade` results into `MultiQC` Report
+  
 * Updated `VADR` alert parameters for `assemblies` mode to pass the following alerts: `--alt_pass lowsim5s,lowsim3s,indf5pst,indf3pst`
+  
 * Minor update to VADR output files to identify edgecase where segments pass VADR but could have short truncations:
   * `vadr-annotation-alerts.txt` --> lists segments that fail VADR annotation
   * `vadr-annotation-alerts.txt` --> lists segments that pass VADR annotation but may have non-fatal issues such as 5' and/or 3' truncations
+    
 * Added error handling in `illumina.nf` and `nanopore.nf` workflows for read count calculation to skip and warn against corrupted .fastq files instead of failing the pipeline
-* Updated `seqtk_seq.nf` to convert a degenerate nucleotide to one of its representative non-degenerate versions (similar to `Clair3) in the selected reference sequence as `BCFTools` does not handle degenerate nucleotides during consensus generation, and will place an `N` instead of the appropriate nucleotide into the consensus sequence [[commit 0cfcc97](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/0cfcc97c37b242df2cdbb99af4e112bb6ca7149d)]
+  
+* Updated `seqtk_seq.nf` to convert a degenerate nucleotide to one of its representative non-degenerate versions (similar to `Clair3`) in the selected reference sequence as `BCFTools` does not handle degenerate nucleotides during consensus generation, and will place an `N` instead of the appropriate nucleotide into the consensus sequence [[commit 0cfcc97](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/0cfcc97c37b242df2cdbb99af4e112bb6ca7149d)]
+
+
+
 
 ## [[IRVC v1.0.2](https://github.com/PHAC-IRVC-Genomics/nf-flu/releases/tag/v1.0.2)] - 2026-03-18
 * Update IRMA to v1.2.0

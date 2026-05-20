@@ -1,11 +1,11 @@
 process NEXTCLADE_DATASET_GET {
   tag "$dataset_name"
 
-  conda "bioconda::nextclade=3.12.0"
+  conda "bioconda::nextclade=3.21.0"
   if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-    container 'https://depot.galaxyproject.org/singularity/nextclade:3.12.0--h9ee0642_0'
+    container 'https://depot.galaxyproject.org/singularity/nextclade:3.21.0--h9ee0642_0'
   } else {
-    container 'quay.io/biocontainers/nextclade:3.12.0--h9ee0642_0'
+    container 'quay.io/biocontainers/nextclade:3.21.0--h9ee0642_0'
   }
 
   input:
@@ -35,11 +35,11 @@ process NEXTCLADE_DATASET_GET {
 process NEXTCLADE_RUN {
   tag "$dataset_name|$sample"
 
-  conda "bioconda::nextclade=3.12.0"
+  conda "bioconda::nextclade=3.21.0"
   if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-    container 'https://depot.galaxyproject.org/singularity/nextclade:3.12.0--h9ee0642_0'
+    container 'https://depot.galaxyproject.org/singularity/nextclade:3.21.0--h9ee0642_0'
   } else {
-    container 'quay.io/biocontainers/nextclade:3.12.0--h9ee0642_0'
+    container 'quay.io/biocontainers/nextclade:3.21.0--h9ee0642_0'
   }
 
   input:

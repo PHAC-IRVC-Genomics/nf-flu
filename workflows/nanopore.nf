@@ -74,7 +74,7 @@ workflow NANOPORE {
       def fq = []
       // compressed FASTQ list
       def fqgz = []
-      // read count
+     // read count
       def count = 0
       for (f in reads) {
         f = file(f)
@@ -99,11 +99,16 @@ workflow NANOPORE {
           }
         }
       }
-      for (x in fq) {
-        count += x.countFastq()
-      }
-      for (x in fqgz) {
-        count += x.countFastq()
+      try {
+        for (x in fq) {
+          count += x.countFastq()
+        }
+        for (x in fqgz) {
+          count += x.countFastq()
+        }
+      } catch (Exception e) {
+        log.warn "WARNING: Skipping corrupt/truncated file for sample '${sample}' — ${e.message}"
+        count = 0
       }
       return [ sample, fqgz, fq, count ]
     }

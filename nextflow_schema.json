@@ -183,44 +183,45 @@
         "mapping_options": {
             "title": "Mapping Options",
             "type": "object",
-            "description": "Minimap2 read mapping options.",
+            "description": "Minimap2 read mapping and DVG filtering options.",
             "default": "",
+            "fa_icon": "fas fa-retweet",
             "properties": {
-                "samtools_flagF": {
+                "samtools_flagF_raw": {
+                    "type": "integer",
+                    "default": 4,
+                    "fa_icon": "fas fa-filter",
+                    "description": "samtools -F flag applied when writing the unfiltered BAM (raw_bam). Default = 4 (unmapped)."
+                },
+                "samtools_flagF_filtered": {
                     "type": "integer",
                     "default": 2308,
-                    "fa_icon": "fas fa-fast-forward",
-                    "description": "One combined -F flag (default 2308 = 4 + 256 + 2048: unmapped + secondary + supplementary)."
+                    "fa_icon": "fas fa-filter",
+                    "description": "samtools -F flag applied when writing the filtered BAM. Default 2308 = 4 (unmapped) + 256 (secondary) + 2048 (supplementary). Secondary alignments are suppressed here unless allow_secondary=true."
                 },
                 "filter_bam": {
                     "type": "boolean",
                     "default": false,
                     "fa_icon": "fas fa-fast-forward",
-                    "description": "Enable/disable advanced DVG filtering using mapped read length BAM filtering"
-                },
-                "max_gap_size": {
-                    "type": "integer",
-                    "default": 500,
-                    "fa_icon": "fas fa-fast-forward",
-                    "description": "Minimap2 -G parameter [Maximum gap on the reference; default 200k]"
-                },
-                "allow_secondary": {
-                    "type": "boolean",
-                    "default": false,
-                    "fa_icon": "fas fa-fast-forward",
-                    "description": "Minimap2 --secondary=yes|no parameter [Whether to output secondary alignments; default: yes]"
+                    "description": "Master switch for AWK-based post-alignment DVG filtering (Nanopore only). When false, only samtools flag filtering is applied. The unfiltered BAM is written in both cases."
                 },
                 "min_map_len": {
                     "type": "integer",
-                    "default": 800,
                     "fa_icon": "fas fa-fast-forward",
-                    "description": "Read with minimum mapped length to retain in BAM file."
+                    "description": "Minimum number of aligned bases (M/=/X CIGAR ops) required to retain a read in the filtered BAM. When null (default), per-segment thresholds targeting ~50% segment coverage are used: PB2/PB1=1170, PA=1075, HA=890, NP=780, NA=700, MP=510, NS=445. Set to 0 to disable."
                 },
                 "max_skip_size": {
                     "type": "integer",
-                    "default": 200,
                     "fa_icon": "fas fa-fast-forward",
-                    "description": "Maximum allowed CIGAR N/D (i.e., skipped region, deletion) Operation range (bp); 0 to disable."
+                    "description": "Maximum allowed single N or D CIGAR operation (bp) in the filtered BAM. Reads with a deletion or skip at or above this threshold are discarded as likely DVGs. Thresholds are set at ~20% of segment length. Thresholds sit comfortably above known legitimate biological deletions (e.g. NA stalk ~30-120 bp) and below canonical DVG sizes. When null (default), per-segment thresholds are used: PB2/PB1=450, PA=425, HA=350, NP=300, NA=275, MP=200, NS=175. Set to 0 to disable."
+                },
+                "max_clip_frac": {
+                    "type": "number",
+                    "default": 0.15,
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "fa_icon": "fas fa-cut",
+                    "description": "Maximum allowed soft/hard clip fraction of total query length in the filtered BAM. Targets internally-mapping DVG-origin reads that carry no large CIGAR gap but have heavily clipped flanks. 0.0 disables this criterion."
                 },
                 "output_unmapped_reads": {
                     "type": "boolean",
@@ -228,8 +229,7 @@
                     "fa_icon": "fas fa-dna",
                     "description": "Keep unmapped reads in BAM output. BAM output sizes without unmapped reads may be drastically smaller."
                 }
-            },
-            "fa_icon": "fas fa-retweet"
+            }
         },
         "mismatch_report_option": {
             "title": "Mistmatch report options",

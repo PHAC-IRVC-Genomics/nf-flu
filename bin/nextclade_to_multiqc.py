@@ -20,21 +20,21 @@ import os
 import sys
 from collections import defaultdict
 
-__version__ = "1.5.0"
+__version__ = "1.5.1"
 
 QC_RANK = {'good': 0, 'mediocre': 1, 'bad': 2, '': 3}
 
 # All columns (used for "all segments" output)
 COLUMNS_ALL = [
     'sample', 'subtype', 'segment', 'legacy-clade', 'short-clade', 'clade',
-    'totalNonACGTNs', 'nonACGTNs', 'qc.frameShifts.frameShifts',
+    'cdsCoverage', 'totalNonACGTNs', 'nonACGTNs', 'qc.frameShifts.frameShifts',
     'qc.stopCodons.stopCodons', 'dataset_tag'
 ]
 
 # Segment-specific columns (exclude 'segment' since it's redundant)
 COLUMNS_SEGMENT = [
     'sample', 'subtype', 'legacy-clade', 'short-clade', 'clade',
-    'totalNonACGTNs', 'nonACGTNs', 'qc.frameShifts.frameShifts',
+    'cdsCoverage', 'totalNonACGTNs', 'nonACGTNs', 'qc.frameShifts.frameShifts',
     'qc.stopCodons.stopCodons', 'dataset_tag'
 ]
 
@@ -45,6 +45,7 @@ COLUMN_LABELS = {
     'legacy-clade':                'Legacy Clade',
     'short-clade':                 'Short Clade',
     'clade':                       'Clade',
+    'cdsCoverage':                 'cds Coverage',
     'totalNonACGTNs':              '# Mixed Sites',
     'nonACGTNs':                   'Mixed Sites',
     'qc.frameShifts.frameShifts':  'Frameshifts',
@@ -141,6 +142,7 @@ def process_rows(rows):
                 'legacy-clade':                r['legacy-clade'],
                 'short-clade':                 r['short-clade'],
                 'clade':                       r['clade'],
+                'cdsCoverage':                 r['cdsCoverage'],
                 'totalNonACGTNs':              r['totalNonACGTNs'],
                 'nonACGTNs':                   r['nonACGTNs'],
                 'qc.frameShifts.frameShifts':  r['qc.frameShifts.frameShifts'],

@@ -7,7 +7,7 @@ import polars as pl
 import typer
 from rich.logging import RichHandler
 
-VERSION = "2025.04.0"
+VERSION = "2026.04.14"
 
 logger = logging.getLogger(__name__)
 app = typer.Typer(rich_markup_mode="markdown")
@@ -92,9 +92,10 @@ def main(
         'short-clade',
         'subclade',
 	    'proposedSubclade',
-        "qc.overallStatus",
-        "coverage",
-        "nonACGTNs"
+        'qc.overallStatus',
+        'cdsCoverage',
+        'coverage',
+        'nonACGTNs'
     ]
     rest_cols = [col for col in all_cols if col not in first_ordered_cols]
     rest_cols.sort()

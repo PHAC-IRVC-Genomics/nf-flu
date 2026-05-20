@@ -770,6 +770,12 @@ def report(
         df_all_blast_pandas = df_all_blast_pandas.rename(
             columns=dict(BLAST_RESULTS_REPORT_COLUMNS)
         )
+        # If a sample has no BLAST hits for segments 4 or 6 (e.g. missing HA/NA sequence),
+        # H_* and N_* columns are never populated. Backfill any missing expected columns 
+        # with empty strings before subsetting to avoid KeyError.
+        for col in SUBTYPE_RESULTS_SUMMARY_COLUMNS + H_COLUMNS + N_COLUMNS:
+            if col not in df_subtype_results.columns:
+                df_subtype_results[col] = ''
         df_subtype_predictions = df_subtype_results[SUBTYPE_RESULTS_SUMMARY_COLUMNS]
         if vadr_sample_subtype:
             df_subtype_predictions['VADR Subtype'] = df_subtype_predictions['sample'].map(vadr_sample_subtype)

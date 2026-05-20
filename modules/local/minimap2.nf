@@ -15,9 +15,11 @@ process MINIMAP2 {
   tuple val(sample), val(segment), val(ref_id), path(ref_fasta), path(reads)
 
   output:
-  tuple val(sample), val(segment), val(ref_id), path(ref_fasta), path('*.{bam,bam.bai}'), emit: alignment
+  tuple val(sample), val(segment), val(ref_id), path(ref_fasta), path("${bam}"), path("${bam}.bai"), emit: alignment
+  tuple val(sample), val(segment), val(ref_id), path(ref_fasta), path("${raw_bam}"), path("${raw_bam}.bai"), emit: raw_alignment, optional: true
   path '*.{flagstat,idxstats,stats}', emit: stats
   path('*.minimap2.log'), emit: log
+  path('*.dvg_filter_stats.json'), optional: true, emit: dvg_stats
   path "versions.yml" , emit: versions
 
   script:
@@ -28,34 +30,93 @@ process MINIMAP2 {
   idxstats          = "${prefix}.idxstats"
   stats             = "${prefix}.stats"
   minimap2_log      = "${prefix}.minimap2.log"
+  dvg_stats         = "${prefix}.dvg_filter_stats.json"
 
   // Mapping preset based on platform
   def map_option = params.platform == 'nanopore' ? 'map-ont' : 'sr'
 
-  // One combined -F flag (default 2308 = 4 + 256 + 2048: unmapped + secondary + supplementary)
-  def flagF = (params.samtools_flagF == null) ? 2308 : params.samtools_flagF as int
+  // Raw/unfiltered BAM flag: default 4 (unmapped only) — retains secondaries,
+  // supplementary, and all other alignments to keep the BAM as raw as possible.
+  // Override with params.samtools_flagF_raw if needed.
+  // Note: if output_unmapped_reads=true, this flag is set to 0 (no filtering).
+  def flagF_raw      = (params.samtools_flagF_raw      != null) ? params.samtools_flagF_raw      as int : 4
 
-  // Threshold for aligned (M, X and =) query bases
-  def min_len = (params.min_map_len == null) ? 0 : params.min_map_len as int
+  // Filtered BAM flag: 2308 = 4 (unmapped) + 256 (secondary) + 2048 (supplementary)
+  // Applied to the filtered BAM only.
+  // Override with params.samtools_flagF_filtered if needed.
+  def flagF_filtered = (params.samtools_flagF_filtered != null) ? params.samtools_flagF_filtered as int : 2308
 
-  // DVG filtering: Maximum allowed skip/deletion size in CIGAR (N or D operations)
-  // DVG reads typically have N operations of 1000s of bp
-  // Set to null or 0 to disable this filter
-  def max_skip = (params.max_skip_size != null) ? params.max_skip_size as int : 200
-  
-  // DVG filtering: limit gap size during alignment (default: no limit)
-  // Set to 500-1000 to prevent DVG reads with large internal deletions from aligning
-  // Set to null or 0 to disable
-  def max_gap = (params.max_gap_size != null && params.max_gap_size > 0) ? params.max_gap_size as int : 0
-  
-  // Disable secondary alignments to ensure single best mapping per read
-  boolean allow_secondary = false
-  if (params.allow_secondary instanceof Boolean) {
-    allow_secondary = params.allow_secondary
-  } else if (params.allow_secondary != null) {
-    allow_secondary = params.allow_secondary.toString().toLowerCase() in ['1','true','yes','y']
+  // Normalise segment name once; used by both lookup tables below.
+  // Strips leading numeric prefix from IRMA-style names (e.g. '1_PB2' -> 'PB2', '4_HA' -> 'HA').
+  // Guards against null values and ensures consistent key matching.
+  def segmentUpper = segment?.toString()?.toUpperCase()?.replaceAll(/^\d+_/, '') ?: ''
+
+  // Minimum aligned (M, X and =) query bases required to retain a read in the
+  // filtered BAM. Acts as a mapping confidence / read quality floor — independent
+  // of DVG filtering. Segment-aware defaults target ~50% segment coverage, which
+  // ensures a read contributes meaningfully to consensus/variant calling without
+  // being so strict that it discards legitimate reads on short segments.
+  //   PB2/PB1     (~2341 bp) -> 1170 bp
+  //   PA          (~2151 bp) -> 1075 bp
+  //   HA          (~1778 bp) ->  890 bp
+  //   NP          (~1565 bp) ->  780 bp
+  //   NA          (~1413 bp) ->  700 bp
+  //   MP          (~1027 bp) ->  510 bp
+  //   NS          ( ~890 bp) ->  445 bp
+  // Override globally with params.min_map_len, or accept per-segment defaults.
+  // null = use segment-aware defaults; 0 = disabled.
+  def minlen_defaults = [
+    'PB2': 1170, 'PB1': 1170, 'PA': 1075,
+    'HA':   890, 'NP':   780,
+    'NA':   700,
+    'MP':   510, 'NS':   445
+  ]
+  def min_len = (params.min_map_len != null)
+      ? params.min_map_len as int
+      : minlen_defaults.getOrDefault(segmentUpper, 445)
+
+  // Maximum soft-clip ratio allowed in the filtered BAM (0.0–1.0).
+  // Reads where soft_clip_bases / total_query_bases exceeds this are discarded.
+  // Targets internally-mapping DVG-origin reads that show no large CIGAR gap
+  // but have heavily clipped flanks. 0.0 = disabled.
+  def max_clip_frac = (params.max_clip_frac != null) ? params.max_clip_frac as double : 0.15
+
+  // DVG CIGAR filter: maximum allowed single N or D operation in the filtered BAM.
+  // Thresholds are set at ~20% of segment length sitting above the largest known
+  // legitimate biological deletions (~120 bp for NA stalk deletions), while remaining
+  // below canonical DVG sizes.
+  //   PB2/PB1     (~2341 bp) -> 450 bp
+  //   PA          (~2151 bp) -> 425 bp
+  //   HA          (~1778 bp) -> 350 bp
+  //   NP          (~1565 bp) -> 300 bp
+  //   NA          (~1413 bp) -> 275 bp
+  //   MP          (~1027 bp) -> 200 bp
+  //   NS          ( ~890 bp) -> 175 bp
+  // Override globally with params.max_skip_size, or accept per-segment defaults.
+  // null = use segment-aware defaults; 0 = disabled.
+  def dvg_skip_defaults = [
+    'PB2': 450, 'PB1': 450, 'PA': 425,
+    'HA':  350, 'NP':  300,
+    'NA':  275,
+    'MP':  200, 'NS':  175
+  ]
+  def max_skip = (params.max_skip_size != null)
+      ? params.max_skip_size as int
+      : dvg_skip_defaults.getOrDefault(segmentUpper, 175)
+
+  // When true, unmapped reads are retained in the raw/unfiltered BAM by setting
+  // the samtools -F flag to 0 (no filtering). Has no effect on the filtered BAM,
+  // which always excludes unmapped reads via FLAGF_FILTERED.
+  boolean output_unmapped = false
+  if (params.output_unmapped_reads instanceof Boolean) {
+    output_unmapped = params.output_unmapped_reads
+  } else if (params.output_unmapped_reads != null) {
+    output_unmapped = params.output_unmapped_reads.toString().toLowerCase() in ['1','true','yes','y']
   }
 
+  // Master switch: enable dvg_filter.py post-alignment filtering.
+  // When false, no filtering beyond FLAGF_RAW is applied.
+  // The raw_bam is only written when filter_bam=true (run_filter=true).
   boolean filter_bam = false
   if (params.filter_bam instanceof Boolean) {
     filter_bam = params.filter_bam
@@ -63,112 +124,78 @@ process MINIMAP2 {
     filter_bam = params.filter_bam.toString().toLowerCase() in ['1','true','yes','y']
   }
 
-  // AWK counts only M, X and = CIGAR ops as aligned bases: ignores soft clips, insertions, deletions and skips.
-  // Also filters reads with large N/D operations (DVG reads) and ensures single contiguous alignment blocks.
-  // Updated to be mawk-compatible with explicit integer conversion and character-by-character parsing.
+  // Determine whether the filter branch should run:
+  // requires nanopore platform, filter_bam=true, and at least one active filter criterion.
+  boolean run_filter = (params.platform == 'nanopore') &&
+                       filter_bam &&
+                       (min_len > 0 || max_skip > 0 || max_clip_frac > 0)
 
   """
   MAP_OPTION=$map_option
-  FLAG_F=$flagF
+  FLAGF_RAW=$flagF_raw
+  FLAGF_FILTERED=$flagF_filtered
   MIN_LEN=$min_len
   MAX_SKIP=$max_skip
-  MAX_GAP=$max_gap
-  ALLOW_SECONDARY=$allow_secondary
+  MAX_CLIP_FRAC=$max_clip_frac
+  OUTPUT_UNMAPPED=$output_unmapped
   FILTER_BAM=$filter_bam
+  RUN_FILTER=$run_filter
+  SEGMENT=$segmentUpper
 
-  if [ "${params.platform}" = "nanopore" ] && [ "\$MIN_LEN" -gt 0 ] && [ "\$FILTER_BAM" = "true" ]; then
-    echo "DVG filtering ENABLED: platform=${params.platform}, MIN_LEN=$min_len, MAX_SKIP=$max_skip, MAX_GAP=$max_gap, ALLOW_SECONDARY=$allow_secondary" >&2
-    
-    # Build minimap2 options
-    MM2_OPTS="-ax \$MAP_OPTION -t${task.cpus}"
-    if [ "\$MAX_GAP" -gt 0 ]; then
-      MM2_OPTS="\$MM2_OPTS -G \$MAX_GAP"
-    fi
-    if [ "\$ALLOW_SECONDARY" = "false" ]; then
-      MM2_OPTS="\$MM2_OPTS --secondary=no"
-    fi
-    
+  # ── Build minimap2 options ────────────────────────────────────────────────
+  # Secondary alignments are ALWAYS allowed at the minimap2 level so that the
+  # raw_bam retains multi-locus DVG mappings for breakpoint analysis.
+  # Secondary suppression for the filtered BAM is applied via FLAGF_FILTERED.
+  MM2_OPTS="-ax \$MAP_OPTION -t${task.cpus}"
+
+  # ── Resolve raw BAM flag ──────────────────────────────────────────────────
+  # If output_unmapped_reads=true, disable all samtools -F filtering (flag 0)
+  # so unmapped reads are retained. Otherwise use FLAGF_RAW (default 4).
+  SAMTOOLS_RAW_F=\$FLAGF_RAW
+  if [ "\$OUTPUT_UNMAPPED" = "true" ]; then
+    SAMTOOLS_RAW_F=0
+  fi
+
+  if [ "\$RUN_FILTER" = "true" ]; then
+    echo "DVG filtering ENABLED: segment=\$SEGMENT, platform=${params.platform}, MIN_LEN=\$MIN_LEN, MAX_SKIP=\$MAX_SKIP, MAX_CLIP_FRAC=\$MAX_CLIP_FRAC, OUTPUT_UNMAPPED=\$OUTPUT_UNMAPPED" >&2
+
+    # ── Pass 1: full alignment -> raw_bam ─────────────────────────────────
+    # SAMTOOLS_RAW_F: 0 if output_unmapped=true, otherwise FLAGF_RAW (default 4).
     minimap2 \$MM2_OPTS $ref_fasta $reads \\
-      | samtools view -h -@${task.cpus} -F \$FLAG_F \\
-      | tee >(samtools view -@${task.cpus} -b \\
-              | samtools sort -@${task.cpus} -O BAM -o $raw_bam) \\
-      | awk -v min_len=\$MIN_LEN -v max_skip=\$MAX_SKIP 'BEGIN {OFS="\t"} {
-          if (\$0 ~ /^@/) {print; next}
-          
-          aligned_length = 0
-          max_deletion = 0
-          num_blocks = 0
-          in_block = 0
-          cigar = \$6
-          num_str = ""
-          
-          # Parse CIGAR string character by character
-          for (i = 1; i <= length(cigar); i++) {
-              c = substr(cigar, i, 1)
-              if (c ~ /[0-9]/) {
-                  num_str = num_str c
-              } else {
-                  if (num_str != "") {
-                      num_val = int(num_str)
-                      
-                      # Count M, =, X as aligned bases
-                      if (c == "M" || c == "=" || c == "X") {
-                          aligned_length += num_val
-                          # Track alignment blocks
-                          if (in_block == 0) {
-                              num_blocks++
-                              in_block = 1
-                          }
-                      }
-                      # Track large deletions/skips (DVG signature)
-                      else if (c == "N" || c == "D") {
-                          if (num_val > max_deletion) {
-                              max_deletion = num_val
-                          }
-                          # Large gap breaks the alignment block
-                          if (num_val > 50) {
-                              in_block = 0
-                          }
-                      }
-                      
-                      num_str = ""
-                  }
-              }
-          }
-          
-          # Filter criteria:
-          # 1. Sufficient aligned length (>= min_len)
-          # 2. No large deletions/skips (< max_skip) - filters DVGs (if max_skip > 0)
-          # 3. Single contiguous alignment block - filters split alignments
-          if (aligned_length >= min_len && (max_skip == 0 || max_deletion <= max_skip) && num_blocks == 1) {
-              print
-          }
-        }' \\
+      | samtools view -h -@${task.cpus} -F \$SAMTOOLS_RAW_F \\
       | samtools view -@${task.cpus} -b \\
-      | samtools sort -@${task.cpus} -O BAM > $bam
+      | samtools sort -@${task.cpus} -O BAM -o $raw_bam
 
     samtools index $raw_bam
 
+    # ── Pass 2: filtered BAM via dvg_filter.py ────────────────────────────
+    # Reads from the already-written raw_bam to avoid the tee race condition.
+    # FLAGF_FILTERED (default 2308) always excludes unmapped reads regardless
+    # of output_unmapped_reads — unmapped reads have no role in variant calling.
+    samtools view -h -@${task.cpus} -F \$FLAGF_FILTERED $raw_bam \\
+      | dvg_filter.py \\
+          --min-len \$MIN_LEN \\
+          --max-skip \$MAX_SKIP \\
+          --max-clip-frac \$MAX_CLIP_FRAC \\
+          --segment \$SEGMENT \\
+          --sample ${sample} \\
+          --stats-out $dvg_stats \\
+      | samtools view -@${task.cpus} -b \\
+      | samtools sort -@${task.cpus} -O BAM > $bam
+
   else
-    echo "AWK-based mapped read-length filtering DISABLED: (platform=${params.platform}, MIN_LEN=\$MIN_LEN)" >&2
-    
-    # Build minimap2 options even when filtering is disabled
-    MM2_OPTS="-ax \$MAP_OPTION -t${task.cpus}"
-    if [ "\$MAX_GAP" -gt 0 ]; then
-      MM2_OPTS="\$MM2_OPTS -G \$MAX_GAP"
-    fi
-    if [ "\$ALLOW_SECONDARY" = "false" ]; then
-      MM2_OPTS="\$MM2_OPTS --secondary=no"
-    fi
-    
+    echo "DVG filtering DISABLED: segment=\$SEGMENT, platform=${params.platform}, MIN_LEN=\$MIN_LEN, MAX_SKIP=\$MAX_SKIP, MAX_CLIP_FRAC=\$MAX_CLIP_FRAC, OUTPUT_UNMAPPED=\$OUTPUT_UNMAPPED" >&2
+
+    # ── No filter path: single pass directly to bam ──────────────────────
+    # SAMTOOLS_RAW_F: 0 if output_unmapped=true, otherwise FLAGF_RAW (default 4).
     minimap2 \$MM2_OPTS $ref_fasta $reads \\
-      | samtools view -h -@${task.cpus} -F \$FLAG_F \\
+      | samtools view -h -@${task.cpus} -F \$SAMTOOLS_RAW_F \\
       | samtools view -@${task.cpus} -b \\
       | samtools sort -@${task.cpus} -O BAM > $bam
   fi
 
   samtools index $bam
-  samtools stats $bam > $stats
+  samtools stats  $bam > $stats
   samtools flagstat $bam > $flagstat
   samtools idxstats $bam > $idxstats
 

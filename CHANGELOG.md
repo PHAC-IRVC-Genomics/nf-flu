@@ -3,7 +3,7 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [[IRVC v1.2.0](https://github.com/PHAC-IRVC-Genomics/nf-flu/releases/tag/v1.0.2)] - 2026-04-XX
+## [[IRVC v1.2.0](https://github.com/PHAC-IRVC-Genomics/nf-flu/releases/tag/v1.2.0)] - 2026-05-XX
 
 ### Major Updates:
 
@@ -11,7 +11,7 @@ Re-implimented the Defective Viral Genome (DVG) filtering process as a standalon
 
 * Optional DVG filtering for Nanopore data (`--filter_bam`, default: `false`). When enabled, a two-pass alignment strategy produces both an unfiltered archive BAM and a filtered BAM suitable for variant calling. Filtering is handled by `dvg_filter.py` with four sequential CIGAR-based criteria and segment-aware thresholds:
   
-     * Minimum aligned length (`--min_map_len`, default `null`: see below): minimum aligned bases required to retain a read in the filtered BAM
+     * Minimum aligned length (`--min_map_len`, default `null`: see below): minimum number of aligned (M, X and =) bases required to retain a read in the filtered BAM
      * Maximum single N/D operation (`--max_skip_size`, default `null`: see below): discards reads with a large internal deletion
      * Single contiguous alignment block: failsafe that discards reads with multiple alignment blocks not explained by a deletion (i.e., malformed/unusual CIGAR strings)
      * Soft-clip fraction (`--max_clip_frac`, default `0.15`): discards internally-mapping DVG reads with heavily clipped flanks larger than a typical primer overhang
@@ -26,26 +26,27 @@ Re-implimented the Defective Viral Genome (DVG) filtering process as a standalon
   
 * `--filter_bam`, `--min_map_len`, `--max_skip_size` and `--max_clip_frac` are configurable in `nextflow.config` and also from command line
 
+* Commits [f44d861](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/f44d8613330a4966e414d67fa4d1b3729743445e), [af7a184](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/af7a184c84b72ea2515460c49320f88ca35e080c), [657e383](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/657e3834b8a01fc2d82bdb630da724543c21adf2), [fc09fde](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/fc09fde56f5c907473b47432afdf9f395a4e0fad), [593a845](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/593a8458fe3077fc6a2ad2120c02c9f9fb8e09d3), [59b4255](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/59b4255e454e467e85ac080a116dba38129d83bf), [28f25a8](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/28f25a89c65a1a30c8c0663f588bbcc184d0405d) and [1ec573b](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/1ec573bcc86461339f19b54e71c0f3bdf721bb98)
+
 ### Minor Updates:
 
-* Update `Genin2` to v2.1.6
+* Update `Genin2` to v2.1.6 [[commit 547582b](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/547582b470575e96dec9902986c8fc3be2410bb3)]
   
-* Update `Nextclade` to v3.21.0
+* Update `Nextclade` to v3.21.0 [[commit 3621430 ](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/36214306bb43f07068e0b87603d08696b83cd14f)]
   
-* Incorporated `cdsCoverage` from `Nextclade` results into `MultiQC` Report
+* Incorporated `cdsCoverage` from `Nextclade` results into `MultiQC` Report [[commit 3d86fa6](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/3d86fa68143fa9b923bde3eace0c9a4e9b5a71cf)]
   
-* Updated `VADR` alert parameters for `assemblies` mode to pass the following alerts: `--alt_pass lowsim5s,lowsim3s,indf5pst,indf3pst`
+* Updated `VADR` alert parameters for `assemblies` mode to pass the following alerts: `--alt_pass lowsim5s,lowsim3s,indf5pst,indf3pst` [[commit 1cafd1d](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/1cafd1dbc4eee4701ddc250b71433b54fcd92a2d)]
   
-* Minor update to VADR output files to identify edgecase where segments pass VADR but could have short truncations:
+* Minor update to VADR output files to identify edgecase where segments pass VADR but could have short truncations [[commit e588c69](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/e588c69c853bbaa0b4ced0cedbe7ebe03006452d)]:
   * `vadr-annotation-alerts.txt` --> lists segments that fail VADR annotation
   * `vadr-annotation-alerts.txt` --> lists segments that pass VADR annotation but may have non-fatal issues such as 5' and/or 3' truncations
     
-* Added error handling in `illumina.nf` and `nanopore.nf` workflows for read count calculation to skip and warn against corrupted .fastq files instead of failing the pipeline
+* Added error handling in `illumina.nf` and `nanopore.nf` workflows for read count calculation to skip and warn against corrupted .fastq files instead of failing the pipeline [[commit 1af430c](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/1af430c049af1c36bae9d2c892d1d9ce5fd15b88)] and [[commit 327b6f8](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/327b6f8cebfda0e569ad3720fede170ad0e67f15)]
   
 * Updated `seqtk_seq.nf` to convert a degenerate nucleotide to one of its representative non-degenerate versions (similar to `Clair3`) in the selected reference sequence as `BCFTools` does not handle degenerate nucleotides during consensus generation, and will place an `N` instead of the appropriate nucleotide into the consensus sequence [[commit 0cfcc97](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/0cfcc97c37b242df2cdbb99af4e112bb6ca7149d)]
 
-
-
+* Updated `subtyping_report.py` to backfill missing expected columns with empty strings in subtype results DataFrame to prevent KeyError causing the subtyping report process to fail [[commit 0d8ff12](https://github.com/PHAC-IRVC-Genomics/nf-flu/commit/0d8ff1235e09e2184c63afde0c6107cc169ec8fd)]
 
 ## [[IRVC v1.0.2](https://github.com/PHAC-IRVC-Genomics/nf-flu/releases/tag/v1.0.2)] - 2026-03-18
 * Update IRMA to v1.2.0

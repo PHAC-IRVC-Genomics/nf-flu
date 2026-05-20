@@ -13,7 +13,7 @@ process CLAIR3 {
   }
 
   input:
-  tuple val(sample), val(segment), val(ref_id), path(ref_fasta), path(bam)
+  tuple val(sample), val(segment), val(ref_id), path(ref_fasta), path(bam), path(bai)
   // optional model_path
   path model_path 
 
@@ -56,7 +56,7 @@ process CLAIR3 {
 
   run_clair3.sh \\
     ${args} \\
-    --bam_fn=${bam[0]} \\
+    --bam_fn=${bam} \\
     --ref_fn=$ref_fasta \\
     --model_path="\$MODEL_PATH"\\
     --threads=${task.cpus} \\

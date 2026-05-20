@@ -189,9 +189,9 @@
             "properties": {
                 "samtools_flagF_raw": {
                     "type": "integer",
-                    "default": 2052,
+                    "default": 4,
                     "fa_icon": "fas fa-filter",
-                    "description": "samtools -F flag applied when writing the unfiltered BAM (raw_bam). Default 2052 = 4 (unmapped) + 2048 (supplementary). Secondary alignments (256) are intentionally retained so that DVG reads with multi-locus mappings are preserved for breakpoint analysis."
+                    "description": "samtools -F flag applied when writing the unfiltered BAM (raw_bam). Default = 4 (unmapped)."
                 },
                 "samtools_flagF_filtered": {
                     "type": "integer",

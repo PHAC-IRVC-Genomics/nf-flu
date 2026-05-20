@@ -32,14 +32,14 @@ process MEDAKA {
     -o ${medaka_dir} \\
     -t ${task.cpus} \\
     -f $fasta \\
-    -i ${bam[0]} \\
+    -i ${bam} \\
     -m ${params.medaka_variant_model} \\
     -s ${params.medaka_snp_model}
   
   medaka tools annotate \\
     ${medaka_dir}/round_1.vcf \\
     $fasta \\
-    ${bam[0]} \\
+    ${bam} \\
     ${vcf} \\
     --dpsp
   

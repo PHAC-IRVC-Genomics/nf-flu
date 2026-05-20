@@ -12,7 +12,7 @@ process MOSDEPTH_GENOME {
   }
 
   input:
-  tuple val(sample), val(segment), val(ref_id), path(fasta), path(bam_bai)
+  tuple val(sample), val(segment), val(ref_id), path(fasta), path(bam), path(bai)
 
   output:
   tuple val(sample), val(segment), val(ref_id), path("*.per-base.bed.gz"), emit: bedgz
@@ -27,7 +27,7 @@ process MOSDEPTH_GENOME {
   mosdepth \\
       --fast-mode \\
       $prefix \\
-      ${bam_bai[0]}
+      ${bam}
   cat <<-END_VERSIONS > versions.yml
   "${task.process}":
      mosdepth: \$(mosdepth --version 2>&1 | sed 's/^.*mosdepth //; s/ .*\$//')

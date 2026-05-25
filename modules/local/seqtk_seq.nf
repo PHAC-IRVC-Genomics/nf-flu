@@ -6,11 +6,7 @@ process SEQTK_SEQ{
   // use default process resources
 
   conda "bioconda::seqtk=1.4"
-  if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-    container 'https://depot.galaxyproject.org/singularity/seqtk:1.4--he4a0461_2'
-  } else {
-    container 'quay.io/biocontainers/seqtk:1.4--he4a0461_2'
-  }
+  container "${ workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? 'https://depot.galaxyproject.org/singularity/seqtk:1.4--he4a0461_2' : 'quay.io/biocontainers/seqtk:1.4--he4a0461_2' }"
 
   input:
   tuple val(sample), val(segment), val(ref_id), path(reads)

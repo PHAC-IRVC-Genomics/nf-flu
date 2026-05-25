@@ -2,23 +2,6 @@
 
 nextflow.enable.dsl = 2
 
-//=============================================================================
-// NCBI Influenza DB reference data
-//=============================================================================
-
-ch_influenza_db_fasta = file(params.ncbi_influenza_fasta)
-ch_influenza_metadata = file(params.ncbi_influenza_metadata)
-
-//=============================================================================
-// NCBI VADR Influenza virus model
-//=============================================================================
-
-ch_vadr_model_targz = file(params.vadr_model_targz)
-
-//=============================================================================
-// MODULES
-//=============================================================================
-
 include { IRMA                                                    } from '../modules/local/irma'
 include { CHECK_SAMPLE_SHEET                                      } from '../modules/local/check_sample_sheet'
 include { SUBTYPING_REPORT as SUBTYPING_REPORT_IRMA_CONSENSUS     } from '../modules/local/subtyping_report'
@@ -58,27 +41,29 @@ include { FLUMUT; PREP_FLUMUT_FASTA                               } from '../mod
 include { GENOFLU                                                 } from '../modules/local/genoflu'
 include { CLEAVAGE_SITE                                           } from '../modules/local/cleavage_site'
 include { GENIN2                                                  } from '../modules/local/genin2'
-// SUBWORKFLOWS
-include { NEXTCLADE } from '../subworkflows/nextclade'
-
-//=============================================================================
-// Workflow Params Setup
-//=============================================================================
-
-def irma_module = 'FLU-utr'
-if (params.irma_module) {
-    irma_module = params.irma_module
-}
-
-def pass_sample_reads = [:]
-def fail_sample_reads = [:]
-def summary_params = NfcoreSchema.params_summary_map(workflow, params, "$projectDir/nextflow_schema.json")
+include { NEXTCLADE                                               } from '../subworkflows/nextclade'
 
 //=============================================================================
 // WORKFLOW
 //=============================================================================
 
 workflow ILLUMINA {
+
+  // NCBI Influenza DB reference data
+  def ch_influenza_db_fasta = file(params.ncbi_influenza_fasta)
+  def ch_influenza_metadata = file(params.ncbi_influenza_metadata)
+
+  // NCBI VADR Influenza virus model
+  def ch_vadr_model_targz = file(params.vadr_model_targz)
+
+  def irma_module = 'FLU-utr'
+  if (params.irma_module) {
+    irma_module = params.irma_module
+  }
+  def pass_sample_reads = [:]
+  def fail_sample_reads = [:]
+  def summary_params = NfcoreSchema.params_summary_map(workflow, params, "$projectDir/nextflow_schema.json")
+
   ch_versions = Channel.empty()
 
   // Sample Sheet Check

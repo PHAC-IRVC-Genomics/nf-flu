@@ -3,11 +3,7 @@ process GENOFLU {
   label 'process_low'
 
   conda 'bioconda::genoflu=1.07'
-  if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-    container 'https://depot.galaxyproject.org/singularity/genoflu:1.07--hdfd78af_0'
-  } else {
-    container 'quay.io/biocontainers/genoflu:1.07--hdfd78af_0'
-  }
+  container "${ workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? 'https://depot.galaxyproject.org/singularity/genoflu:1.07--hdfd78af_0' : 'quay.io/biocontainers/genoflu:1.07--hdfd78af_0' }"
 
   input:
   tuple val(sample), path(consensus_fasta)

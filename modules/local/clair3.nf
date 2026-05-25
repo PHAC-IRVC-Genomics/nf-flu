@@ -6,11 +6,7 @@ process CLAIR3 {
   label 'process_low'
 
   conda 'bioconda::clair3==1.1.2'
-  if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-    container 'https://depot.galaxyproject.org/singularity/clair3:1.1.2--py310h779eee5_0'
-  } else {
-    container 'quay.io/biocontainers/clair3:1.1.2--py310h779eee5_0'
-  }
+  container "${ workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? 'https://depot.galaxyproject.org/singularity/clair3:1.1.2--py310h779eee5_0' : 'quay.io/biocontainers/clair3:1.1.2--py310h779eee5_0' }"
 
   input:
   tuple val(sample), val(segment), val(ref_id), path(ref_fasta), path(bam)

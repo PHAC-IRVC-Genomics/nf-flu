@@ -167,7 +167,8 @@ jobs:
             --ncbi_influenza_fasta influenza-10k.fna.zst \
             --ncbi_influenza_metadata influenza.csv.zst \
             --vadr_model_targz vadr-models-flu-1.6.3-2.tar.gz \
-            --max_cpus 4
+            --max_cpus 4 \
+            --max_memory "12 GB"
       - name: Upload .nextflow.log
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
@@ -254,7 +255,8 @@ jobs:
             --ncbi_influenza_fasta influenza-10k.fna.zst \
             --ncbi_influenza_metadata influenza.csv.zst \
             --vadr_model_targz vadr-models-flu-1.6.3-2.tar.gz \
-            --max_cpus 4
+            --max_cpus 4 \
+            --max_memory "12 GB"
       - name: post - df, Docker df, Docker images
         if: ${{ always() }}
         run: |
@@ -383,7 +385,8 @@ jobs:
             --ncbi_influenza_fasta influenza-10k.fna.zst \
             --ncbi_influenza_metadata influenza.csv.zst \
             --vadr_model_targz vadr-models-flu-1.6.3-2.tar.gz \
-            --max_cpus 4
+            --max_cpus 4 \
+            --max_memory "12 GB"
       - name: Tree of results
         run: tree -h results/
       - name: post - df, Docker df, Docker images

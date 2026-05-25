@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Update: GenoFLU 1.06 -> 1.07, IRMA 1.0.2 -> 1.2.0
 * Update strict syntax for Nextflow 26
 * Add options for local Nextclade dataset
+* Require Nextflow >= 25.04.0
 
 ## [[3.10.3](https://github.com/CFIA-NCFAD/nf-flu/releases/tag/3.10.3)] - 2026-01-26
 

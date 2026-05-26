@@ -326,8 +326,45 @@ def parse_blast_result(
 
 
 def top_genus(df: pl.DataFrame) -> str:
-    genus: pl.Series = df['Genus']
-    return genus.value_counts(sort=True)['Genus'][0]
+    """Determine genus by majority vote across segments.
+
+    For each segment, find the most frequent genus amongst all BLAST hits for
+    that segment, then cast one vote per segment and return the winning genus.
+    This prevents a single high-hit-count contaminant segment from skewing the
+    result (e.g. a minor FluA contaminant assembled alongside genuine FluB
+    segments generating 10x more BLAST rows than every other segment combined).
+    """
+    # Per-segment top genus: each segment casts one vote.
+    # Iterate over unique segments rather than using group_by/struct.field
+    # for compatibility with older Polars versions.
+    df_filtered = df.filter(pl.col("Genus").is_not_null())
+    segment_top_genera = []
+    for seg in df_filtered["sample_segment"].unique().to_list():
+        seg_genus = (
+            df_filtered
+            .filter(pl.col("sample_segment") == seg)["Genus"]
+            .value_counts(sort=True)["Genus"][0]
+        )
+        segment_top_genera.append(seg_genus)
+    genus_votes = pl.Series(segment_top_genera).value_counts(sort=True)
+    winning_genus: str = genus_votes[genus_votes.columns[0]][0]
+    total_votes: int = genus_votes["counts"].sum()
+    winning_votes: int = genus_votes["counts"][0]
+    if winning_votes < total_votes:
+        genus_col = genus_votes.columns[0]
+        minority_genera = [
+            f"{row[genus_col]}={row['counts']}"
+            for row in genus_votes.filter(pl.col(genus_col) != winning_genus).iter_rows(named=True)
+        ]
+        logger.warning(
+            f"Mixed genus detected across segments — winning genus '{winning_genus}' "
+            f"({winning_votes}/{total_votes} segment votes). "
+            f"Minority: {', '.join(minority_genera)}. "
+            f"This may indicate contamination or a mixed sample."
+        )
+    else:
+        logger.info(f"Genus '{winning_genus}' unanimous across all {total_votes} segments.")
+    return winning_genus
 
 
 def get_subtype_value(H_results: Optional[Dict], N_results: Optional[Dict], is_iav: bool) -> str:

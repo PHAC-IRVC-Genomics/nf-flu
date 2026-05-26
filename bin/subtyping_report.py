@@ -23,7 +23,7 @@ import pandas as pd
 import polars as pl
 from rich.logging import RichHandler
 
-VERSION = "2026.05.26"
+VERSION = "2025.03.1"
 
 logger = logging.getLogger(__name__)
 

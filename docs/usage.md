@@ -331,6 +331,13 @@ Path/URL to the custom VADR flu.minfo file to use for annotation. Default is the
 
 CSV containing Nextclade datasets and optionally tags (versions) to run against assembled Influenza genomes.
 
+#### `--nextclade_dataset_dir`
+
+- Type: string
+- Default: `null`
+
+Path to a local directory containing pre-downloaded Nextclade datasets (as directories or .zip files) to run offline.
+
 ### Skipping options
 
 #### `--skip_flumut`

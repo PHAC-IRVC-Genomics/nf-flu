@@ -39,25 +39,25 @@ include { CLEAVAGE_SITE                                       } from '../modules
 include { MULTIQC                                             } from '../modules/local/multiqc'
 include { MQC_VERSIONS_TABLE                                  } from '../modules/local/mqc_versions_table'
 include { GENIN2                                              } from '../modules/local/genin2'
-// SUBWORKFLOWS
-include { NEXTCLADE } from '../subworkflows/nextclade'
-
-def pass_sample_reads = [:]
-def fail_sample_reads = [:]
-ch_influenza_db_fasta = file(params.ncbi_influenza_fasta)
-ch_influenza_metadata = file(params.ncbi_influenza_metadata)
-ch_vadr_model_targz = file(params.vadr_model_targz)
-if (params.clair3_user_variant_model) {
-  ch_user_clair3_model = file(params.clair3_user_variant_model, checkIfExists: true)
-}
-def irma_module = 'FLU-minion'
-if (params.irma_module) {
-    irma_module = params.irma_module
-}
-def json_schema = "$projectDir/nextflow_schema.json"
-def summary_params = NfcoreSchema.params_summary_map(workflow, params, json_schema)
+include { NEXTCLADE                                           } from '../subworkflows/nextclade'
 
 workflow NANOPORE {
+
+  def pass_sample_reads = [:]
+  def fail_sample_reads = [:]
+  def ch_influenza_db_fasta = file(params.ncbi_influenza_fasta)
+  def ch_influenza_metadata = file(params.ncbi_influenza_metadata)
+  def ch_vadr_model_targz = file(params.vadr_model_targz)
+  if (params.clair3_user_variant_model) {
+    ch_user_clair3_model = file(params.clair3_user_variant_model, checkIfExists: true)
+  }
+  def irma_module = 'FLU-minion'
+  if (params.irma_module) {
+    irma_module = params.irma_module
+  }
+  def json_schema = "$projectDir/nextflow_schema.json"
+  def summary_params = NfcoreSchema.params_summary_map(workflow, params, json_schema)
+
   ch_versions = Channel.empty()
 
   ch_input = CHECK_SAMPLE_SHEET(Channel.fromPath(params.input, checkIfExists: true))
@@ -76,7 +76,7 @@ workflow NANOPORE {
       def fqgz = []
       // read count
       def count = 0
-      for (f in reads) {
+      reads.each { f->
         f = file(f)
         if (f.isFile() && f.getName() ==~ /.*\.(fastq|fq)(\.gz)?/) {
           if (f.getName() ==~ /.*\.gz/) {
@@ -84,11 +84,11 @@ workflow NANOPORE {
           } else {
             fq << f
           }
-          continue
+          return
         }
         if (f.isDirectory()) {
           // only look for FQ reads in first level of directory
-          for (x in f.listFiles()) {
+          f.listFiles().each { x ->
             if (x.isFile() && x.getName() ==~ /.*\.(fastq|fq)(\.gz)?/) {
               if (x.getName() ==~ /.*\.gz/) {
                 fqgz << x
@@ -99,10 +99,10 @@ workflow NANOPORE {
           }
         }
       }
-      for (x in fq) {
+      fq.each { x ->
         count += x.countFastq()
       }
-      for (x in fqgz) {
+      fqgz.each { x ->
         count += x.countFastq()
       }
       return [ sample, fqgz, fq, count ]

@@ -282,6 +282,12 @@
                     "default": "${projectDir}/assets/nextclade-datasets.csv",
                     "description": "CSV containing Nextclade datasets and optionally tags (versions) to run against assembled Influenza genomes.",
                     "fa_icon": "fas fa-virus"
+                },
+                "nextclade_dataset_dir": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Path to a local directory containing pre-downloaded Nextclade datasets (as directories or .zip files) to run offline.",
+                    "fa_icon": "fas fa-folder-open"
                 }
             }
         },

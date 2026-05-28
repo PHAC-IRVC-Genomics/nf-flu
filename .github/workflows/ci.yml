@@ -30,7 +30,7 @@ jobs:
     strategy:
       matrix:
         # Nextflow versions: check pipeline minimum and current latest
-        nxf_ver: ['22.10.1', '24.10.3']
+        nxf_ver: ['25.04.0', '26.04.2']
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v4
@@ -123,7 +123,7 @@ jobs:
     strategy:
         matrix:
             # Nextflow versions: check pipeline minimum and current latest
-            nxf_ver: ['22.10.1', '24.10.3']
+            nxf_ver: ['25.04.0', '26.04.2']
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v4
@@ -166,7 +166,9 @@ jobs:
             -profile test_assemblies,docker \
             --ncbi_influenza_fasta influenza-10k.fna.zst \
             --ncbi_influenza_metadata influenza.csv.zst \
-            --vadr_model_targz vadr-models-flu-1.6.3-2.tar.gz
+            --vadr_model_targz vadr-models-flu-1.6.3-2.tar.gz \
+            --max_cpus 4 \
+            --max_memory "12 GB"
       - name: Upload .nextflow.log
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
@@ -199,7 +201,7 @@ jobs:
     strategy:
       matrix:
         # Nextflow versions: check pipeline minimum and current latest
-        nxf_ver: ['22.10.1', '24.10.3']
+        nxf_ver: ['25.04.0', '26.04.2']
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v4
@@ -252,7 +254,9 @@ jobs:
             -profile test_illumina,docker \
             --ncbi_influenza_fasta influenza-10k.fna.zst \
             --ncbi_influenza_metadata influenza.csv.zst \
-            --vadr_model_targz vadr-models-flu-1.6.3-2.tar.gz
+            --vadr_model_targz vadr-models-flu-1.6.3-2.tar.gz \
+            --max_cpus 4 \
+            --max_memory "12 GB"
       - name: post - df, Docker df, Docker images
         if: ${{ always() }}
         run: |
@@ -291,7 +295,7 @@ jobs:
     strategy:
       matrix:
         # Nextflow versions: check pipeline minimum and current latest
-        nxf_ver: ['22.10.1', '24.10.3']
+        nxf_ver: ['25.04.0', '26.04.2']
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v4
@@ -380,7 +384,9 @@ jobs:
             --input samplesheet.csv \
             --ncbi_influenza_fasta influenza-10k.fna.zst \
             --ncbi_influenza_metadata influenza.csv.zst \
-            --vadr_model_targz vadr-models-flu-1.6.3-2.tar.gz
+            --vadr_model_targz vadr-models-flu-1.6.3-2.tar.gz \
+            --max_cpus 4 \
+            --max_memory "12 GB"
       - name: Tree of results
         run: tree -h results/
       - name: post - df, Docker df, Docker images

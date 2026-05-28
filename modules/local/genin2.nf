@@ -2,11 +2,7 @@ process GENIN2 {
   label 'process_low'
 
   conda 'bioconda::genin2=2.1.3'
-  if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-    container 'https://depot.galaxyproject.org/singularity/genin2:2.1.3--pyhdfd78af_0'
-  } else {
-    container 'quay.io/biocontainers/genin2:2.1.3--pyhdfd78af_0'
-  }
+  container "${ workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? 'https://depot.galaxyproject.org/singularity/genin2:2.1.3--pyhdfd78af_0' : 'quay.io/biocontainers/genin2:2.1.3--pyhdfd78af_0' }"
 
   input:
   path(fasta)

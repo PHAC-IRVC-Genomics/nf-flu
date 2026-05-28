@@ -1,20 +1,6 @@
 #!/usr/bin/env nextflow
 
 nextflow.enable.dsl = 2
-
-//=============================================================================
-// NCBI Influenza DB reference data
-//=============================================================================
-
-ch_influenza_db_fasta = file(params.ncbi_influenza_fasta)
-ch_influenza_metadata = file(params.ncbi_influenza_metadata)
-
-//=============================================================================
-// NCBI VADR Influenza virus model
-//=============================================================================
-
-ch_vadr_model_targz = file(params.vadr_model_targz)
-
 //=============================================================================
 // MODULES
 //=============================================================================
@@ -35,19 +21,18 @@ include { FLUMUT; VADR2FLUMUT                         } from '../modules/local/f
 include { GENOFLU                                     } from '../modules/local/genoflu'
 include { CLEAVAGE_SITE                               } from '../modules/local/cleavage_site'
 include { GENIN2                                      } from '../modules/local/genin2'
-// SUBWORKFLOWS
 include { NEXTCLADE                                   } from '../subworkflows/nextclade'
 
-//=============================================================================
-// Workflow Params Setup
-//=============================================================================
 
-def summary_params = NfcoreSchema.params_summary_map(workflow, params, "$projectDir/nextflow_schema.json")
-
-//=============================================================================
-// WORKFLOW
-//=============================================================================
 workflow ASSEMBLIES {
+
+  // NCBI Influenza DB reference data
+  def ch_influenza_db_fasta = file(params.ncbi_influenza_fasta)
+  def ch_influenza_metadata = file(params.ncbi_influenza_metadata)
+
+  // NCBI VADR Influenza virus model
+  def ch_vadr_model_targz = file(params.vadr_model_targz)
+  def summary_params = NfcoreSchema.params_summary_map(workflow, params, "$projectDir/nextflow_schema.json")
   ch_versions = Channel.empty()
 
   ch_input_fasta = Channel.fromPath("${params.input}/*.fa*").map {

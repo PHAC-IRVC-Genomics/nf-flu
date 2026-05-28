@@ -42,7 +42,7 @@ def saveFiles(Map args) {
         def path_list = [ ioptions.publish_dir ?: args.publish_dir ]
         if (ioptions.publish_by_meta) {
             def key_list = ioptions.publish_by_meta instanceof List ? ioptions.publish_by_meta : args.publish_by_meta
-            for (key in key_list) {
+            key_list.each { key ->
                 if (args.meta && key instanceof String) {
                     def path = key
                     if (args.meta.containsKey(key)) {
@@ -54,12 +54,16 @@ def saveFiles(Map args) {
             }
         }
         if (ioptions.publish_files instanceof Map) {
-            for (ext in ioptions.publish_files) {
+            def found_file = null
+            ioptions.publish_files.each { ext ->
                 if (args.filename.endsWith(ext.key)) {
                     def ext_list = path_list.collect()
                     ext_list.add(ext.value)
-                    return "${getPathFromList(ext_list)}/$args.filename"
+                    found_file = "${getPathFromList(ext_list)}/$args.filename"
                 }
+            }
+            if (found_file) {
+                return found_file
             }
         } else if (ioptions.publish_files == null) {
             return "${getPathFromList(path_list)}/$args.filename"

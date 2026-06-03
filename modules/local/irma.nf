@@ -3,11 +3,7 @@ process IRMA {
   label 'process_long'
 
   conda "bioconda::irma=1.2.0"
-  if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-    container 'https://depot.galaxyproject.org/singularity/irma:1.2.0--pl5321hdfd78af_0'
-  } else {
-    container 'quay.io/biocontainers/1.2.0--pl5321hdfd78af_0'
-  }
+  container "${ workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? 'https://depot.galaxyproject.org/singularity/irma:1.2.0--pl5321hdfd78af_0' : 'quay.io/biocontainers/irma:1.2.0--pl5321hdfd78af_0' }"
 
   input:
   tuple val(meta), path(reads)

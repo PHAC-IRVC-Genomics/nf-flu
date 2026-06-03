@@ -8,11 +8,7 @@ process CAT_ILLUMINA_FASTQ {
   conda "conda-forge::perl"
   // use BLAST container here since it has Perl and is required by other
   // processes in the pipeline
-  if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-    container 'https://depot.galaxyproject.org/singularity/blast:2.15.0--pl5321h6f7f691_1'
-  } else {
-    container 'quay.io/biocontainers/blast:2.15.0--pl5321h6f7f691_1'
-  }
+  container "${ workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? 'https://depot.galaxyproject.org/singularity/blast:2.15.0--pl5321h6f7f691_1' : 'quay.io/biocontainers/blast:2.15.0--pl5321h6f7f691_1' }"
 
   input:
   tuple val(meta), path(reads, stageAs: "input*/*")

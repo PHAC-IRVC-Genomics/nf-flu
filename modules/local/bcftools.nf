@@ -6,11 +6,7 @@ process BCF_CONSENSUS {
   label 'process_medium'
 
   conda 'bioconda::bcftools=1.20 conda-forge::gsl=2.7'
-  if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-    container 'https://depot.galaxyproject.org/singularity/bcftools:1.20--h8b25389_0'
-  } else {
-    container 'quay.io/biocontainers/bcftools:1.20--h8b25389_0'
-  }
+  container "${ workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? 'https://depot.galaxyproject.org/singularity/bcftools:1.20--h8b25389_0' : 'quay.io/biocontainers/bcftools:1.20--h8b25389_0' }"
 
   input:
   tuple val(sample), val(segment), val(ref_id) , path(fasta), path(vcf), path(mosdepth_per_base)
@@ -58,11 +54,7 @@ process BCF_FILTER {
   label 'process_low'
 
   conda 'bioconda::bcftools=1.20 conda-forge::gsl=2.7'
-  if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-    container 'https://depot.galaxyproject.org/singularity/bcftools:1.20--h8b25389_0'
-  } else {
-    container 'quay.io/biocontainers/bcftools:1.20--h8b25389_0'
-  }
+  container "${ workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? 'https://depot.galaxyproject.org/singularity/bcftools:1.20--h8b25389_0' : 'quay.io/biocontainers/bcftools:1.20--h8b25389_0' }"
 
   input:
   tuple val(sample), val(segment), val(ref_id), path(fasta), path(vcf)
@@ -129,11 +121,7 @@ process BCFTOOLS_STATS {
   label 'process_low'
 
   conda 'bioconda::bcftools=1.20 conda-forge::gsl=2.7'
-  if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-    container 'https://depot.galaxyproject.org/singularity/bcftools:1.20--h8b25389_0'
-  } else {
-    container 'quay.io/biocontainers/bcftools:1.20--h8b25389_0'
-  }
+  container "${ workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? 'https://depot.galaxyproject.org/singularity/bcftools:1.20--h8b25389_0' : 'quay.io/biocontainers/bcftools:1.20--h8b25389_0' }"
   input:
   tuple val(sample), val(segment), val(ref_id), path(fasta), path(vcf)
 

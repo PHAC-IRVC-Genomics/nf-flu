@@ -62,11 +62,7 @@ process NEXTCLADE_TO_MULTIQC {
   label 'process_low'
 
   conda 'conda-forge::python=3.10'
-  if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-    container 'https://depot.galaxyproject.org/singularity/python:3.10'
-  } else {
-    container 'quay.io/biocontainers/python:3.10'
-  }
+  container "${ workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? 'https://depot.galaxyproject.org/singularity/python:3.10' : 'quay.io/biocontainers/python:3.10' }"
 
   input:
   path(nextclade_tsv)

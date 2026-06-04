@@ -100,12 +100,8 @@ workflow NANOPORE {
         }
       }
       try {
-        for (x in fq) {
-          count += x.countFastq()
-        }
-        for (x in fqgz) {
-          count += x.countFastq()
-        }
+        fq.each   { x -> count += x.countFastq() }
+        fqgz.each { x -> count += x.countFastq() }
       } catch (Exception e) {
         log.warn "WARNING: Skipping corrupt/truncated file for sample '${sample}' — ${e.message}"
         count = 0

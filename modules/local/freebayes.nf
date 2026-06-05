@@ -10,7 +10,7 @@ process FREEBAYES {
     container "${ workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container ? 'https://depot.galaxyproject.org/singularity/freebayes:1.3.8--h6a68c12_2' : 'quay.io/biocontainers/freebayes:1.3.8--h6a68c12_1' }"
 
     input:
-    tuple val(sample), val(segment), val(ref_id), path(ref_fasta), path(bam)
+    tuple val(sample), val(segment), val(ref_id), path(ref_fasta), path(bam), path(bai)
 
 
     output:
@@ -27,7 +27,7 @@ process FREEBAYES {
 
     freebayes \\
         -f $ref_fasta \\
-        -b ${bam[0]} \\
+        -b $bam \\
         --vcf ${freebayes_dir}/${vcf}
 
     ln -s ${freebayes_dir}/${vcf} ${vcf}
